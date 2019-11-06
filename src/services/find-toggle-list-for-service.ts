@@ -1,14 +1,17 @@
-const { get } = require('lodash');
+import { get } from 'lodash';
+import { Toggle, ToguruData } from '../types/toguru';
 
-const toggleBelongsToService = (toggle, serviceName) => {
+/**
+  @deprecated
+*/
+const toggleBelongsToService = (toggle: Toggle, serviceName: string) => {
     const service = get(toggle, 'tags.service', '').split(',');
     const services = get(toggle, 'tags.services', '').split(',');
-
     return service.concat(services).includes(serviceName);
 };
 
-module.exports = (togglestate, service) => {
-    const toggles = get(togglestate, 'toggles', []);
+export default (toguruData: ToguruData, service: string): string[] => {
+    const toggles = get(toguruData, 'toggles', []);
     const togglesForService = toggles.filter((t) => toggleBelongsToService(t, service));
 
     return togglesForService.map((t) => t.id);
