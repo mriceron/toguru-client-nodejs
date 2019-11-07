@@ -1,4 +1,5 @@
-const isEnabled = require('../src/services/is-toggle-enabled');
+import isEnabled from '../src/services/is-toggle-enabled';
+import { ToguruData } from '../src/types/toguru';
 const toggleState = require('./togglestate.fixture.json');
 
 const userInBucket22CultureDE = {
@@ -20,10 +21,12 @@ const userInBucket76CultureIT = {
 const userWithoutUUID = { culture: 'de-DE' }; // bucket: 1
 const userEmpty = {};
 
+const emptyToguruData: ToguruData = { sequenceNo: 0, toggles: [] };
+
 describe('Is Toggle Enabled', () => {
-    it('empty togglestate', () => {
-        expect(isEnabled({}, 'doesnt-matter', userInBucket22CultureDE)).toBe(false);
-        expect(isEnabled({}, 'doesnt-matter', userEmpty)).toBe(false);
+    it('empty toggles state', () => {
+        expect(isEnabled(emptyToguruData, 'doesnt-matter', userInBucket22CultureDE)).toBe(false);
+        expect(isEnabled(emptyToguruData, 'doesnt-matter', userEmpty)).toBe(false);
     });
 
     it('rolled-out-to-noone', () => {

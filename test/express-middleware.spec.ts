@@ -49,11 +49,6 @@ const userInBucket22CultureIT = {
     uuid: '88248687-6dce-4759-a5c0-3945eedc2b48',
     query: {},
 }; // bucket: 22
-// const userInBucket76CultureIT = {
-//     culture: 'it-IT',
-//     uuid: '721f87e2-cec9-4753-b3bb-d2ebe20dd317',
-//     query: {},
-// }; // bucket: 76
 
 describe('Express middleware', () => {
     it('userInBucket22CultureDE', async () => {
