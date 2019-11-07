@@ -7,9 +7,6 @@ const toggleBelongsToService = (toggle: Toggle, serviceName: string) => {
     return service.concat(services).includes(serviceName);
 };
 
-/**
-  @deprecated
-*/
 export default (toguruData: ToguruData, service: string): string[] => {
     const toggles = get(toguruData, 'toggles', []);
     const togglesForService = toggles.filter((t) => toggleBelongsToService(t, service));

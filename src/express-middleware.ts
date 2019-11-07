@@ -70,8 +70,10 @@ export default ({ endpoint, refreshInterval = 60000, cookieName, cultureCookieNa
             req.toguru = {
                 isToggleEnabled: (toggleName: string) =>
                     client.isToggleEnabled(toggleName, { uuid, culture, forcedToggles }),
+
                 togglesForService: (service: string) =>
                     client.togglesForService(service, { uuid, culture, forcedToggles }),
+
                 toggleNamesForService: (service: string) => client.toggleNamesForService(service),
 
                 toggleStringForService: (service: string) => {

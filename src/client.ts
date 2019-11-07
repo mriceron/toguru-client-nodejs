@@ -22,7 +22,6 @@ export default ({ endpoint, refreshInterval = 60000 }: { endpoint: string; refre
         },
 
         toggleNamesForService: (service: string) => findToggleListForService(toggleState, service),
-
         togglesForService: (service: string, user: User) => {
             const result: Record<string, boolean> = {};
             const toggleIds = findToggleListForService(toggleState, service);
