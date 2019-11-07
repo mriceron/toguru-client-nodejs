@@ -1,7 +1,7 @@
 // Not sure what this is in terms of a data structure, if something from toguru or a mix
 export type User = {
-    culture: string;
-    uuid: string;
+    culture?: string;
+    uuid?: string;
     forcedToggles?: Record<string, boolean>;
 };
 

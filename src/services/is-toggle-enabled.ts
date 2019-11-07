@@ -9,7 +9,7 @@ export default (togglestate: ToguruData, togglename: string, { uuid, culture, fo
 
     const toggles = get(togglestate, 'toggles', []) as ToguruData['toggles'];
     const toggle = toggles.find((t) => t.id === togglename);
-    const bucket = calculateBucket(uuid);
+    const bucket = calculateBucket(uuid || '');
 
     const rolloutCultures = get(toggle, 'activations.0.attributes.culture', []);
 

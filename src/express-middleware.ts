@@ -54,9 +54,10 @@ export default ({ endpoint, refreshInterval = 60000, cookieName, cultureCookieNa
             const cookiesRaw = get(req, 'headers.cookie', '');
             const cookies = cookie.parse(cookiesRaw);
 
-            const uuid = cookies[cookieName] || getCookieValueFromResponseHeader(res, cookieName);
+            const uuid = cookies[cookieName] || getCookieValueFromResponseHeader(res, cookieName) || undefined;
 
-            const culture = cookies[cultureCookieName] || getCookieValueFromResponseHeader(res, cultureCookieName);
+            const culture =
+                cookies[cultureCookieName] || getCookieValueFromResponseHeader(res, cultureCookieName) || undefined;
 
             const forcedTogglesRaw = Object.assign(
                 {},
