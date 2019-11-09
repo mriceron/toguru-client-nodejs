@@ -1,4 +1,5 @@
-import { Request, Response, NextFunction } from "express"
+import { Request, Response, NextFunction } from 'express'
+import { Toggle, ToggleState } from './src/Toggle'
 
 // Type definitions for toguru-client
 // Project: Scout24/toguru-client-nodejs
@@ -13,23 +14,26 @@ declare global {
 }
 
 declare function ToguruMiddleware(
-    toguruClientParams: ToguruMiddleware.ToguruMiddlewareParams
+    toguruClientParams: ToguruMiddleware.ToguruMiddlewareParams,
 ): ToguruMiddleware.ToguruMiddlewareInstance;
 
 declare namespace ToguruMiddleware {
-
     export interface ToguruMiddlewareParams {
         endpoint: string;
         refreshInterval: number;
         cookieName: string;
         cultureCookieName: string;
     }
-    export type ToguruMiddlewareInstance = (req: Request, res: Response, next: NextFunction) => Promise<RequestToguruClient>;
+    export type ToguruMiddlewareInstance = (
+        req: Request,
+        res: Response,
+        next: NextFunction,
+    ) => Promise<RequestToguruClient>;
 
     export interface RequestToguruClient {
-        isToggleEnabled: (toggleName: string) => boolean;
-        togglesForService: (service: string) => Record<string, boolean>;
-        toggleNamesForService: (service: string) => string[];
+        isOn: (toggle: Toggle) => boolean;
+        isOff: (toggle: Toggle) => boolean;
+        togglesForService: (service: string) => ToggleState[];
         toggleStringForService: (service: string) => string;
     }
 }

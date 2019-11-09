@@ -5,7 +5,7 @@ export type User = {
     forcedToggles?: Record<string, boolean>;
 };
 
-export type Toggle = {
+export type ToguruToggleState = {
     id: string;
     tags: Record<string, string>;
     activations: Array<{
@@ -20,5 +20,5 @@ export type Toggle = {
 
 export type ToguruData = {
     sequenceNo: number;
-    toggles: Toggle[];
+    toggles: ToguruToggleState[];
 };

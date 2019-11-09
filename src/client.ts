@@ -1,35 +1,54 @@
-import fetchTogglestate from './services/fetch-togglestate';
-import isToggleEnabledForUser from './services/is-toggle-enabled';
-import findToggleListForService from './services/find-toggle-list-for-service';
-import { User, ToguruData } from './types/toguru';
+import fetchTogglestate from './services/fetchToguruData'
+import findToggleListForService from './services/toggleListForService'
+import isToggleEnabledForUser from './services/isToggleEnabled'
+import { User, ToguruData } from './types/toguru'
+import { Toggle, ToggleState } from './Toggle'
+import { stringify } from 'qs'
+import qs from 'qs'
 
-export default ({ endpoint, refreshInterval = 60000 }: { endpoint: string; refreshInterval: number }) => {
-    let toggleState: ToguruData = {} as ToguruData;
+export type ToguruClientConfig = {
+    endpoint: string
+    refreshIntervalMs?: number
+}
 
-    fetchTogglestate(endpoint).then((ts) => (toggleState = ts));
+export type ToguruClient = {
+    isToggleEnabled: (toggle: Toggle, user: User) => boolean
+    togglesForService: (service: string, user: User) => ToggleState[]
+    toggleStringForService: (service: string, user: User) => string
+}
+
+export default (config: ToguruClientConfig): ToguruClient => {
+    const { endpoint, refreshIntervalMs = 60000 } = config
+    let toguruData: ToguruData = { sequenceNo: 0, toggles: [] }
+
+    fetchTogglestate(endpoint).then((ts) => (toguruData = ts))
 
     setInterval(() => {
-        fetchTogglestate(endpoint).then((ts) => (toggleState = ts));
-    }, refreshInterval);
+        fetchTogglestate(endpoint).then((ts) => (toguruData = ts))
+    }, refreshIntervalMs)
 
     return {
-        isToggleEnabled: (toggleName: string, { uuid, culture, forcedToggles }: User) => {
-            return isToggleEnabledForUser(toggleState, toggleName, {
+        isToggleEnabled: (toggle: Toggle, { uuid, culture, forcedToggles }: User): boolean => {
+            return isToggleEnabledForUser(toguruData, toggle, {
                 uuid,
                 culture,
                 forcedToggles,
-            });
+            })
         },
-
-        toggleNamesForService: (service: string) => findToggleListForService(toggleState, service),
-        togglesForService: (service: string, user: User) => {
-            const result: Record<string, boolean> = {};
-            const toggleIds = findToggleListForService(toggleState, service);
-            toggleIds.forEach((t) => {
-                result[t] = isToggleEnabledForUser(toggleState, t, user);
-            });
-
-            return result;
+        togglesForService: (service: string, user: User): ToggleState[] => {
+            const toggleIds = findToggleListForService(toguruData, service)
+            return toggleIds.reduce((toggles, id) => {
+                toggles.push({ id, enabled: isToggleEnabledForUser(toguruData, { id, default: false }, user) })
+                return toggles
+            }, [] as ToggleState[])
         },
-    };
-};
+        toggleStringForService: (service: string, user: User) => {
+            const toggleIds = findToggleListForService(toguruData, service)
+            const togglesForService: Record<string, boolean> = toggleIds.reduce((toggles, id) => {
+                toggles[id] = isToggleEnabledForUser(toguruData, { id, default: false }, user)
+                return toggles
+            }, {} as Record<string, boolean>)
+            return `toguru=${encodeURIComponent(qs.stringify(togglesForService, { delimiter: '|' }))}`
+        },
+    }
+}
