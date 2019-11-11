@@ -9,6 +9,7 @@
         "test": "jest",
         "test:coverage": "jest --coverage ",
         "format:check": "prettier --list-different '*/**/*.{js,ts,tsx,json,md,scss,graphql,css}' || (echo \"Problem with code format. Please do yarn run prettier:fix\" && exit 1)",
+        "lint": "eslint --ext={ts,tsx} .",
         "format:fix": "prettier --write '*/**/*.{js,ts,tsx,json,md,scss,graphql,css}' '*.{js,ts,tsx,json,md,scss,graphql,css}'"
     },
     "jest": {
@@ -61,8 +62,10 @@
         "@types/lodash": "^4.14.144",
         "@types/qs": "^6.5.3",
         "@types/set-cookie-parser": "^0.0.5",
+        "@typescript-eslint/eslint-plugin": "^2.6.1",
+        "@typescript-eslint/parser": "^2.6.1",
         "eslint": "^6.0.1",
-        "eslint-config-prettier": "^6.0.0",
+        "eslint-config-prettier": "^6.5.0",
         "eslint-plugin-prettier": "^3.1.0",
         "express": "^4.17.1",
         "prettier": "^1.19.1",
