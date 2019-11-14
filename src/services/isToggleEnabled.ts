@@ -2,13 +2,13 @@ import calculateBucket from './calculateBuckets'
 import { ToguruData, UserInfo } from '../types/toguru'
 import { Toggle } from '../types/Toggle'
 
-export default (toggleState: ToguruData, toggle: Toggle, { uuid, culture, forcedToggles }: UserInfo): boolean => {
+export default (toguruData: ToguruData, toggle: Toggle, { uuid, culture, forcedToggles }: UserInfo): boolean => {
     if (forcedToggles && toggle.id in forcedToggles) {
         return forcedToggles[toggle.id]
     }
     // immediately return if uuid is not defined and the toggle not forced
     if (!uuid) return toggle.default
-    const toggles = toggleState.toggles
+    const toggles = toguruData.toggles
     const toggleData = toggles.find((t) => t.id === toggle.id)
     // return default if the toggle is not set
     if (!toggleData) return toggle.default
