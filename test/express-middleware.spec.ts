@@ -28,7 +28,7 @@ const sendRequest = async ({
         cookieName: 'uid',
         cultureCookieName: 'culture',
         endpoint: '123',
-        refreshInterval: 1000,
+        refreshIntervalMs: 1000,
     })(fakeRequest, null as any, fakeNext)
 
     return fakeRequest

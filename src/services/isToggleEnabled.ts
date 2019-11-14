@@ -6,11 +6,12 @@ export default (toggleState: ToguruData, toggle: Toggle, { uuid, culture, forced
     if (forcedToggles && toggle.id in forcedToggles) {
         return forcedToggles[toggle.id]
     }
-
+    // immediately return if uuid is not defined and the toggle not forced
+    if (!uuid) return toggle.default
     const toggles = toggleState.toggles
     const toggleData = toggles.find((t) => t.id === toggle.id)
-
-    if (!uuid) return toggle.default
+    // return default if the toggle is not set
+    if (!toggleData) return toggle.default
     const bucket = calculateBucket(uuid, toggle.default ? 100 : 0)
 
     const rolloutCultures = toggleData?.activations[0]?.attributes?.culture || []
