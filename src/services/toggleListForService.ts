@@ -1,6 +1,6 @@
-import { ToguruToggleState, ToguruData } from '../types/toguru'
+import { ToguruToggleData, ToguruData } from '../types/toguru'
 
-const toggleBelongsToService = (toggle: ToguruToggleState, serviceName: string): boolean => {
+const toggleBelongsToService = (toggle: ToguruToggleData, serviceName: string): boolean => {
     const service = (toggle?.tags['service'] || '').split(',')
     const services = (toggle?.tags['services'] || '').split(',')
     return service.concat(services).includes(serviceName)

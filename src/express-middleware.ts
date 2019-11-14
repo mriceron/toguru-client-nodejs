@@ -4,8 +4,9 @@ import qs from 'qs'
 import setCookieParser from 'set-cookie-parser'
 import { get, mapValues } from 'lodash'
 import { Response, Request, NextFunction } from 'express'
-import { Toggle, ToggleState } from './Toggle'
-import { User } from './types/toguru'
+import { Toggle } from './types/Toggle'
+import { UserInfo } from './types/toguru'
+import { Toggles } from './types/Toggles'
 
 const getCookieValueFromResponseHeader = (res: Response | null, cookieName: string): string | null => {
     if (!res || !res.getHeader) {
@@ -28,10 +29,8 @@ declare global {
     namespace Express {
         interface Request {
             toguru?: {
-                isOn: (toggle: Toggle) => boolean
-                isOff: (toggle: Toggle) => boolean
-                togglesForService: (service: string) => ToggleState[]
-                toggleStringForService: (service: string) => string
+                isToggleEnabled: (toggle: Toggle) => boolean
+                togglesForService: (service: string) => Toggles
             }
         }
     }
@@ -67,20 +66,16 @@ export default (config: ToguruExpressMiddlewareConfig) => {
 
             const forcedToggles = mapValues(forcedTogglesRaw, (v) => v === 'true')
 
-            const user: User = { uuid, culture, forcedToggles }
+            const user: UserInfo = { uuid, culture, forcedToggles }
 
             req.toguru = {
-                isOn: (toggle: Toggle) => client.isToggleEnabled(toggle, user),
-                isOff: (toggle: Toggle) => !client.isToggleEnabled(toggle, user),
+                isToggleEnabled: (toggle: Toggle) => client.isToggleEnabled(toggle, user),
                 togglesForService: (service: string) => client.togglesForService(service, user),
-                toggleStringForService: (service: string) => client.toggleStringForService(service, user),
             }
         } catch (ex) {
             req.toguru = {
-                isOn: () => false,
-                isOff: () => true,
-                togglesForService: () => [],
-                toggleStringForService: () => '',
+                isToggleEnabled: () => false,
+                togglesForService: () => new Toggles([]),
             }
             console.warn('Error in Toguru Client:', ex)
         } finally {
