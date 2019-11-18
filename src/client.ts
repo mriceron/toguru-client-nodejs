@@ -1,4 +1,4 @@
-import fetchTogglestate from './services/fetchToguruData'
+import fetchToguruData from './services/fetchToguruData'
 import findToggleListForService from './services/toggleListForService'
 import isToggleEnabledForUser from './services/isToggleEnabled'
 import { UserInfo, ToguruData } from './types/toguru'
@@ -20,10 +20,19 @@ export default (config: ToguruClientConfig): ToguruClient => {
     const { endpoint, refreshIntervalMs = 60000 } = config
     let toguruData: ToguruData = { sequenceNo: 0, toggles: [] }
 
-    fetchTogglestate(endpoint).then((ts) => (toguruData = ts))
+    const refreshToguruData = () =>
+        fetchToguruData(endpoint)
+            .catch((e) => console.warn(`Unable to refresh toguru data: ${e}`))
+            .then((td) => {
+                if (td) {
+                    toguruData = td
+                }
+            })
+
+    refreshToguruData()
 
     setInterval(() => {
-        fetchTogglestate(endpoint).then((ts) => (toguruData = ts))
+        refreshToguruData()
     }, refreshIntervalMs)
 
     return {
