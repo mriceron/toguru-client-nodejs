@@ -1,24 +1,24 @@
 import isEnabled from '../src/services/isToggleEnabled'
-import { ToguruData } from '../src/types/toguru'
+import { ToguruData, UserInfo } from '../src/types/toguru'
 import toggleState from './togglestate.fixture.json'
 
 const userInBucket22CultureDE = {
-    culture: 'de-DE',
+    attributes: { culture: 'de-DE' },
     uuid: '88248687-6dce-4759-a5c0-3945eedc2b48',
 } // bucket: 22
 const userInBucket76CultureDE = {
-    culture: 'de-DE',
+    attributes: { culture: 'de-DE' },
     uuid: '721f87e2-cec9-4753-b3bb-d2ebe20dd317',
 } // bucket: 76
 const userInBucket22CultureIT = {
-    culture: 'it-IT',
+    attributes: { culture: 'it-IT' },
     uuid: '88248687-6dce-4759-a5c0-3945eedc2b48',
 } // bucket: 22
-const userInBucket76CultureIT = {
-    culture: 'it-IT',
+const userInBucket76CultureIT: UserInfo = {
+    attributes: { culture: 'it-IT' },
     uuid: '721f87e2-cec9-4753-b3bb-d2ebe20dd317',
 } // bucket: 76
-const userWithoutUUID = { culture: 'de-DE' } // bucket: 1
+const userWithoutUUID = { attributes: { culture: 'de-DE' } } // bucket: 1
 const userEmpty = {}
 
 const emptyToguruData: ToguruData = { sequenceNo: 0, toggles: [] }

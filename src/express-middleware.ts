@@ -1,28 +1,54 @@
-import cookie from 'cookie'
 import Client, { ToguruClientConfig } from './client'
-import qs from 'qs'
-import setCookieParser from 'set-cookie-parser'
-import { get, mapValues } from 'lodash'
 import { Response, Request, NextFunction } from 'express'
 import { Toggle } from './types/Toggle'
 import { UserInfo } from './types/toguru'
 import { Toggles } from './types/Toggles'
 
-const getCookieValueFromResponseHeader = (res: Response | null, cookieName: string): string | null => {
-    if (!res || !res.getHeader) {
-        return null
+type Extractor<T> = (r: Request) => T
+type AttributeExtractor = { attribute: string; extractor: Extractor<string> }
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+// @ts-ignore
+class ToguruExpressMiddlewareConfigBuilder implements Partial<ToguruExpressMiddlewareConfig> {
+    uuidExtractor?: Extractor<string>
+    attributeExtractors?: AttributeExtractor[]
+    forceTogglesExtractor?: Extractor<Record<string, boolean>>
+
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    constructor() {}
+
+    withAttributeExtractor(
+        attributeExtractor: AttributeExtractor,
+    ): this & Pick<ToguruExpressMiddlewareConfig, 'attributeExtractors'> {
+        this.attributeExtractors = this.attributeExtractors ?? []
+        this.attributeExtractors?.push(attributeExtractor)
+        return { ...this, attributeExtractors: this.attributeExtractors }
     }
 
-    const cookies = setCookieParser.parse(res.getHeader('set-cookie') as any)
-    const cookie = cookies.find((c) => c.name === cookieName)
+    withUUIDExtractor(ex: Extractor<string>): this & Pick<ToguruExpressMiddlewareConfig, 'uuidExtractor'> {
+        this.uuidExtractor = ex
+        return { ...this, uuidExtractor: this.uuidExtractor }
+    }
 
-    return cookie ? cookie.value : null
+    withForcedTogglesExtractor(
+        ex: Extractor<Record<string, boolean>>,
+    ): this & Pick<ToguruExpressMiddlewareConfig, 'forceTogglesExtractor'> {
+        this.forceTogglesExtractor = ex
+        return { ...this, forceTogglesExtractor: this.forceTogglesExtractor }
+    }
+
+    build(this: ToguruExpressMiddlewareConfig): ToguruExpressMiddlewareConfig {
+        return this
+    }
 }
 
 type ToguruExpressMiddlewareConfig = {
-    cookieName: string
-    cultureCookieName: string
-} & ToguruClientConfig
+    client: ToguruClientConfig
+    uuidExtractor: Extractor<string>
+    forceTogglesExtractor: Extractor<Record<string, boolean>>
+    attributeExtractors: AttributeExtractor[]
+}
 
 declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -43,30 +69,19 @@ declare global {
  * @param cultureCookieName - name of the cookie containing the user culture value
  */
 
-export default (config: ToguruExpressMiddlewareConfig) => {
-    const cookieName = config.cookieName
-    const cultureCookieName = config.cultureCookieName
-    const client = Client(config)
+export default (clientConfig: ToguruClientConfig) => (config: ToguruExpressMiddlewareConfig) => {
+    const client = Client(clientConfig)
 
-    return async (req: Request, res: Response, next: NextFunction) => {
+    return async (req: Request, _: Response, next: NextFunction) => {
         try {
-            const cookiesRaw = get(req, 'headers.cookie', '')
-            const cookies = cookie.parse(cookiesRaw)
-
-            const uuid = cookies[cookieName] || getCookieValueFromResponseHeader(res, cookieName) || undefined
-
-            const culture =
-                cookies[cultureCookieName] || getCookieValueFromResponseHeader(res, cultureCookieName) || undefined
-
-            const forcedTogglesRaw = Object.assign(
-                {},
-                qs.parse(cookies.toguru),
-                qs.parse((req.query && req.query.toguru) || '', { delimiter: '|' }),
-            )
-
-            const forcedToggles = mapValues(forcedTogglesRaw, (v) => v === 'true')
-
-            const user: UserInfo = { uuid, culture, forcedToggles }
+            const user: UserInfo = {
+                uuid: config.uuidExtractor(req),
+                forcedToggles: config.forceTogglesExtractor(req),
+                attributes: config.attributeExtractors.reduce((acc, ax) => {
+                    acc[ax.attribute] = ax.extractor(req)
+                    return acc
+                }, {} as Record<string, string>),
+            }
 
             req.toguru = {
                 isToggleEnabled: (toggle: Toggle) => client.isToggleEnabled(toggle, user),

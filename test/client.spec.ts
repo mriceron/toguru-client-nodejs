@@ -3,15 +3,15 @@ import mockedTogglestate from './togglestate.fixture.json'
 import { Toggles } from '../src/types/Toggles'
 
 const userInBucket22CultureDE = {
-    culture: 'de-DE',
+    attributes: { culture: 'de-DE' },
     uuid: '88248687-6dce-4759-a5c0-3945eedc2b48',
 } // bucket: 22
 const userInBucketb76CultureDE = {
-    culture: 'de-DE',
+    attributes: { culture: 'de-DE' },
     uuid: '721f87e2-cec9-4753-b3bb-d2ebe20dd317',
 } // bucket: 76
 const userInBucket22CultureIT = {
-    culture: 'it-IT',
+    attributes: { culture: 'it-IT' },
     uuid: '88248687-6dce-4759-a5c0-3945eedc2b48',
 } // bucket: 22
 const userInBucket22NoCulture = {

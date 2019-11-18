@@ -36,12 +36,8 @@ export default (config: ToguruClientConfig): ToguruClient => {
     }, refreshIntervalMs)
 
     return {
-        isToggleEnabled: (toggle: Toggle, { uuid, culture, forcedToggles }: UserInfo): boolean => {
-            return isToggleEnabledForUser(toguruData, toggle, {
-                uuid,
-                culture,
-                forcedToggles,
-            })
+        isToggleEnabled: (toggle: Toggle, user: UserInfo): boolean => {
+            return isToggleEnabledForUser(toguruData, toggle, user)
         },
         togglesForService: (service: string, user: UserInfo): Toggles => {
             const toggleIds = findToggleListForService(toguruData, service)
