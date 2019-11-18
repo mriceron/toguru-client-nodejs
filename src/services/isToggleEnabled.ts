@@ -6,21 +6,21 @@ export default (toguruData: ToguruData, toggle: Toggle, { uuid, culture, forcedT
     if (forcedToggles && toggle.id in forcedToggles) {
         return forcedToggles[toggle.id]
     }
-    // immediately return if uuid is not defined and the toggle not forced
-    if (!uuid) return toggle.default
+
     const toggles = toguruData.toggles
     const toggleData = toggles.find((t) => t.id === toggle.id)
+    const rolloutPercentage = toggleData?.activations[0]?.rollout?.percentage || 0
+
     // return default if the toggle is not set
     if (!toggleData) return toggle.default
-    const bucket = calculateBucket(uuid, toggle.default ? 100 : 0)
-
+    // if the uuid is not defined then the toggle is really evaluated only if released to 100%
+    const bucket = uuid ? calculateBucket(uuid, toggle.default ? 100 : 0) : 100
     const rolloutCultures = toggleData?.activations[0]?.attributes?.culture || []
 
     if (rolloutCultures.length > 0) {
         if (!culture || !rolloutCultures.includes(culture)) return false
     }
 
-    const rolloutPercentage = toggleData?.activations[0]?.rollout?.percentage || 0
     if (rolloutPercentage >= bucket) {
         return true
     }

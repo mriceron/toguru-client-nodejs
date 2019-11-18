@@ -29,7 +29,7 @@ describe('Is Toggle Enabled', () => {
     it('empty toggles state', () => {
         expect(isEnabled(emptyToguruData, toggle('doesnt-matter', true), userInBucket22CultureDE)).toBe(true)
         expect(isEnabled(emptyToguruData, toggle('doesnt-matter', false), userInBucket22CultureDE)).toBe(false)
-        expect(isEnabled(emptyToguruData, toggle('doesnt-matter', true), userEmpty)).toBe(false)
+        expect(isEnabled(emptyToguruData, toggle('doesnt-matter', true), userEmpty)).toBe(true)
         expect(isEnabled(emptyToguruData, toggle('doesnt-matter', false), userEmpty)).toBe(false)
     })
 
@@ -79,8 +79,6 @@ describe('Is Toggle Enabled', () => {
         expect(isEnabled(toggleState, toggle('rolled-out-only-in-de'), userInBucket76CultureDE)).toBe(true)
         expect(isEnabled(toggleState, toggle('rolled-out-only-in-de'), userInBucket22CultureIT)).toBe(false)
         expect(isEnabled(toggleState, toggle('rolled-out-only-in-de'), userInBucket76CultureIT)).toBe(false)
-        // should a user with no uuid define end up in bucket 1?
-        // probably ended up out of sync in the js implementation since the default was 100
         expect(isEnabled(toggleState, toggle('rolled-out-only-in-de'), userWithoutUUID)).toBe(true)
         expect(isEnabled(toggleState, toggle('rolled-out-only-in-de'), userEmpty)).toBe(false)
     })
