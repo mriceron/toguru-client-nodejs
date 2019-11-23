@@ -1,6 +1,6 @@
 name: Node CI
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
   build:
@@ -19,9 +19,11 @@ jobs:
         node-version: ${{ matrix.node-version }}
     - name: install yarn
       run: curl -o- -L https://yarnpkg.com/install.sh
+    - name: install packages
+      run: yarn install
+    - name: install format check
+      run: yarn format:check
     - name: run tests
-      run: |
-        yarn install
-        yarn test
+      run: yarn test
       env:
         CI: true
