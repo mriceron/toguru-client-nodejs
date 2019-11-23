@@ -1,9 +1,16 @@
-import { Request, NextFunction } from 'express'
+import { Request, NextFunction, Response } from 'express'
 import expressMiddleware from '../src/express-middleware'
 import mockedTogglestate from './togglestate.fixture.json'
+import { fromCookie, defaultForcedTogglesExtractor } from '../src/expressMiddleware/extractors'
+import { Toggle } from '../src/types/Toggle'
+import { Toggles } from '../src/types/Toggles'
 
+let clientRefreshRes: (_: void) => void
 jest.mock('axios', () => {
-    return jest.fn().mockImplementation(() => Promise.resolve({ data: mockedTogglestate }))
+    return jest.fn().mockImplementation(() => {
+        clientRefreshRes()
+        return Promise.resolve({ data: mockedTogglestate })
+    })
 })
 
 const sendRequest = async ({
@@ -11,27 +18,41 @@ const sendRequest = async ({
     culture,
     query,
 }: {
-    uuid: string;
-    culture: string;
-    query: Record<string, string>;
+    uuid: string
+    culture: string
+    query: Record<string, string>
 }) => {
     const fakeRequest: Request = {
         headers: {
             cookie: `uid=${uuid};culture=${culture}`,
         },
         query: query || {},
-    } as any
+    } as Request
 
     const fakeNext = jest.fn<NextFunction, []>()
 
-    await expressMiddleware({
-        cookieName: 'uid',
-        cultureCookieName: 'culture',
-        endpoint: '123',
-        refreshIntervalMs: 1000,
-    })(fakeRequest, null as any, fakeNext)
+    const clientReady = new Promise((res) => {
+        clientRefreshRes = res
+    })
+
+    const middleWare = expressMiddleware({
+        client: { endpoint: 'endpoint', refreshIntervalMs: 100000 },
+        uuidExtractor: fromCookie('uid'),
+        attributeExtractors: [{ attribute: 'culture', extractor: fromCookie('culture') }],
+        forceTogglesExtractor: defaultForcedTogglesExtractor,
+    })
+
+    await clientReady
+
+    await middleWare(fakeRequest, {} as Response, fakeNext)
 
     return fakeRequest
+}
+
+const toggles: Record<string, Toggle> = {
+    rolledOutToEveryone: { id: 'rolled-out-to-everyone', default: false },
+    rolledOutToHalfInDeOnly: { id: 'rolled-out-to-half-in-de-only', default: false },
+    rolledOutToNone: { id: 'rolled-out-to-noone', default: false },
 }
 
 const userInBucket22CultureDE = {
@@ -55,8 +76,8 @@ describe('Express middleware', () => {
         const req = await sendRequest(userInBucket22CultureDE)
         expect(req.toguru).toBeDefined()
         if (req.toguru) {
-            expect(req.toguru.isToggleEnabled('rolled-out-to-everyone')).toBe(true)
-            expect(req.toguru.isToggleEnabled('rolled-out-to-half-in-de-only')).toBe(true)
+            expect(req.toguru.isToggleEnabled(toggles.rolledOutToEveryone)).toBe(true)
+            expect(req.toguru.isToggleEnabled(toggles.rolledOutToHalfInDeOnly)).toBe(true)
         }
     })
 
@@ -64,8 +85,8 @@ describe('Express middleware', () => {
         const req = await sendRequest(userInBucketb76CultureDE)
         expect(req.toguru).toBeDefined()
         if (req.toguru) {
-            expect(req.toguru.isToggleEnabled('rolled-out-to-noone')).toBe(false)
-            expect(req.toguru.isToggleEnabled('rolled-out-to-half-in-de-only')).toBe(false)
+            expect(req.toguru.isToggleEnabled(toggles.rolledOutToNone)).toBe(false)
+            expect(req.toguru.isToggleEnabled(toggles.rolledOutToHalfInDeOnly)).toBe(false)
         }
     })
 
@@ -73,10 +94,18 @@ describe('Express middleware', () => {
         const req = await sendRequest(userInBucket22CultureDE)
         expect(req.toguru).toBeDefined()
         if (req.toguru) {
-            expect(req.toguru.togglesForService('service2')).toEqual({
-                'rolled-out-to-half-in-de-only': true,
-                'rolled-out-to-noone': false,
-            })
+            expect(req.toguru.togglesForService('service2')).toEqual(
+                new Toggles([
+                    {
+                        id: 'rolled-out-to-half-in-de-only',
+                        enabled: true,
+                    },
+                    {
+                        id: 'rolled-out-to-noone',
+                        enabled: false,
+                    },
+                ]),
+            )
         }
     })
 
@@ -84,10 +113,18 @@ describe('Express middleware', () => {
         const req = await sendRequest(userInBucket22CultureIT)
         expect(req.toguru).toBeDefined()
         if (req.toguru) {
-            expect(req.toguru.togglesForService('service2')).toEqual({
-                'rolled-out-to-half-in-de-only': false,
-                'rolled-out-to-noone': false,
-            })
+            expect(req.toguru.togglesForService('service2')).toEqual(
+                new Toggles([
+                    {
+                        id: 'rolled-out-to-half-in-de-only',
+                        enabled: false,
+                    },
+                    {
+                        id: 'rolled-out-to-noone',
+                        enabled: false,
+                    },
+                ]),
+            )
         }
     })
 
@@ -95,7 +132,7 @@ describe('Express middleware', () => {
         const req = await sendRequest(userInBucket22CultureIT)
         expect(req.toguru).toBeDefined()
         if (req.toguru) {
-            expect(req.toguru.toggleStringForService('service2')).toEqual(
+            expect(req.toguru.togglesForService('service2').queryString()).toEqual(
                 'toguru=rolled-out-to-half-in-de-only%3Dfalse%7Crolled-out-to-noone%3Dfalse',
             )
         }
@@ -110,8 +147,8 @@ describe('Express middleware', () => {
         })
         expect(req.toguru).toBeDefined()
         if (req.toguru) {
-            expect(req.toguru.isToggleEnabled('rolled-out-to-noone')).toBe(true)
-            expect(req.toguru.isToggleEnabled('rolled-out-to-half-in-de-only')).toBe(true)
+            expect(req.toguru.isToggleEnabled(toggles.rolledOutToNone)).toBe(true)
+            expect(req.toguru.isToggleEnabled(toggles.rolledOutToHalfInDeOnly)).toBe(true)
         }
     })
 })

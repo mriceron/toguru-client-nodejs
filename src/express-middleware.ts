@@ -4,13 +4,14 @@ import { Toggle } from './types/Toggle'
 import { UserInfo } from './types/toguru'
 import { Toggles } from './types/Toggles'
 
-type Extractor<T> = (r: Request) => T
+type Extractor<T> = (r: Request) => T | undefined
 type AttributeExtractor = { attribute: string; extractor: Extractor<string> }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
 // @ts-ignore
 class ToguruExpressMiddlewareConfigBuilder implements Partial<ToguruExpressMiddlewareConfig> {
+    client?: ToguruClientConfig
     uuidExtractor?: Extractor<string>
     attributeExtractors?: AttributeExtractor[]
     forceTogglesExtractor?: Extractor<Record<string, boolean>>
@@ -29,6 +30,11 @@ class ToguruExpressMiddlewareConfigBuilder implements Partial<ToguruExpressMiddl
     withUUIDExtractor(ex: Extractor<string>): this & Pick<ToguruExpressMiddlewareConfig, 'uuidExtractor'> {
         this.uuidExtractor = ex
         return { ...this, uuidExtractor: this.uuidExtractor }
+    }
+
+    withClientConfig(client: ToguruClientConfig): this & Pick<ToguruExpressMiddlewareConfig, 'client'> {
+        this.client = client
+        return { ...this, client: this.client }
     }
 
     withForcedTogglesExtractor(
@@ -69,8 +75,8 @@ declare global {
  * @param cultureCookieName - name of the cookie containing the user culture value
  */
 
-export default (clientConfig: ToguruClientConfig) => (config: ToguruExpressMiddlewareConfig) => {
-    const client = Client(clientConfig)
+export default (config: ToguruExpressMiddlewareConfig) => {
+    const client = Client(config.client)
 
     return async (req: Request, _: Response, next: NextFunction) => {
         try {
@@ -78,7 +84,8 @@ export default (clientConfig: ToguruClientConfig) => (config: ToguruExpressMiddl
                 uuid: config.uuidExtractor(req),
                 forcedToggles: config.forceTogglesExtractor(req),
                 attributes: config.attributeExtractors.reduce((acc, ax) => {
-                    acc[ax.attribute] = ax.extractor(req)
+                    const value = ax.extractor(req)
+                    if (value) acc[ax.attribute] = value
                     return acc
                 }, {} as Record<string, string>),
             }
